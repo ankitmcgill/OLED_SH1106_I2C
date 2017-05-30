@@ -33,6 +33,8 @@
 #ifndef _SH1106_I2C_H_
 #define _SH1106_I2C_H_
 
+//#include "FONT_INFO.h"
+
 #ifdef ESP8266
 	#include "ets_sys.h"
 	#include "osapi.h"
@@ -106,6 +108,16 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayNormal(void);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(uint8_t fill_pattern);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void);
-//INTERNAL FUNCTIOMS
+
+//DRAWING FUNCTIONS
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap();
+//void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawText(uint8_t x, uint8_t y, FONT_INFO f_info, char* str, uint8_t len, uint8_t color);
 //END FUNCTION PROTOTYPES/////////////////////////////////
 #endif

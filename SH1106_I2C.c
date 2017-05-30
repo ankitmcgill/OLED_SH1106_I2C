@@ -38,7 +38,7 @@ static uint8_t _sh1106_i2c_debug;
 
 //DEVICE RELATED
 static uint8_t _sh1106_i2c_slave_address;
-static uint8_t* _sh1106_frambuffer_pointer;
+static uint8_t* _sh1106_framebuffer_pointer;
 //END LOCAL LIBRARY VARIABLES/////////////////////////////
 
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDebug(uint8_t debug_on)
@@ -70,7 +70,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
 	//INITIALIZE THE OLED MODULE AS PER THE DEFAULT PARAMETERS
 
 	//INITIALIZE DISPLAY FRAMBUFFER
-	_sh1106_frambuffer_pointer = (uint8_t*)os_zalloc((SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1));
+	_sh1106_framebuffer_pointer = (uint8_t*)os_zalloc((SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1));
 
 	//INITIALIZE THE DISPLAY
 	_sh1106_i2c_send_start_function();
@@ -88,7 +88,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
 	//BECAUSE THIS CONTROLLER HAS RAM SIZE 132 X 64 WHEREAS OUR DISPLAY
 	//IS 128 X 4. SO THE OLED IS MAPPED FROM RAM COLUMN 2 - COLUMN 130
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COLUMN_LOWER_4 | 2);
-	_sh1106_i2c_send_byte_function(0x10);
+	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COLUMN_UPPER_4 | 0);
 
 	//SET START PAGE ADDRESS = 0
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_PAGE_ADDRESS | 0);
@@ -96,8 +96,8 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
 	//SET COMMON OUTPUT SCAN DIRECTION = TOP -> BOTTOM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COMMON_SCAN_DIRECTION | 0);
 
-	_sh1106_i2c_send_byte_function(0x00);
-	_sh1106_i2c_send_byte_function(0x10);
+	//_sh1106_i2c_send_byte_function(0x00);
+	//_sh1106_i2c_send_byte_function(0x10);
 
 	//SET DISPLAY START LINE = 0
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_DISPLAY_START_LINE | 0);
@@ -259,7 +259,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(uint8_t fill_pattern)
 
 	for(counter = 0; counter < (SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1); counter++)
 	{
-		_sh1106_frambuffer_pointer[counter] = fill_pattern;
+		_sh1106_framebuffer_pointer[counter] = fill_pattern;
 	}
 
 	if(_sh1106_i2c_debug)
@@ -284,9 +284,9 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 		_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
 		_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
 
-		//SET COLUMN TO 0
+		//SET COLUMN TO 2
+		_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COLUMN_UPPER_4);
 		_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COLUMN_LOWER_4 | 0);
-		_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COLUMN_UPPER_4 | 0);
 
 		//SET PAGE
 		_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_PAGE_ADDRESS | y);
@@ -299,7 +299,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 
 		for(x = 0; x < (SH1106_I2C_OLED_MAX_COLUMN + 1); x++)
 		{
-			_sh1106_i2c_send_byte_function(_sh1106_frambuffer_pointer[counter]);
+			_sh1106_i2c_send_byte_function(_sh1106_framebuffer_pointer[counter]);
 			counter++;
 		}
 		_sh1106_i2c_send_stop_function();
@@ -310,3 +310,152 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 		debug_printf("SH1106 : Display updated with frame buffer\n");
 	}
 }
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color)
+{
+	//SET OR UNSET A PIXEL AT THE SPECIFIED X,Y LOCATION
+
+	if((x > SH1106_I2C_OLED_MAX_COLUMN) || (y > (SH1106_I2C_OLED_MAX_PAGE * 8 + 7)))
+	{
+		//PIXEL OUT OF RANGE
+		if(_sh1106_i2c_debug)
+		{
+			debug_printf("SH1106 : Drawpixel out of range\n");
+		}
+		return;
+	}
+
+	//PIXEL IN RANGE
+	if(!color)
+	{
+		//CLEAR PIXEL
+		_sh1106_framebuffer_pointer[((y/8) * 128) + x] &= ~(1 << (y%8));
+	}
+	else
+	{
+		//DRAW PIXEL
+		_sh1106_framebuffer_pointer[((y/8) * 128) + x] |= (1 << (y%8));
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color)
+{
+	//DRAW A VERTICAL LINE
+
+	uint8_t counter = y_start;
+	while(counter <= y_end)
+	{
+		SH1106_I2C_DrawPixel(x, counter, color);
+		counter += 1;
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawline vertical\n");
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color)
+{
+	//DRAW A HORIZONTAL LINE
+
+	uint8_t counter = x_start;
+	while(counter <= x_end)
+	{
+		SH1106_I2C_DrawPixel(counter, y, color);
+		counter += 1;
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawline horizontal\n");
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
+{
+	//DRAW EMPTY RECTANGLE BETWEEN THE SPECIFIED COORDINATES
+
+	SH1106_I2C_DrawLineHorizontal(x_start, x_end, y_start, color);
+	SH1106_I2C_DrawLineHorizontal(x_start, x_end, y_end, color);
+	SH1106_I2C_DrawLineVertical(x_start, y_start, y_end, color);
+	SH1106_I2C_DrawLineVertical(x_end, y_start, y_end, color);
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawbox empty\n");
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
+{
+	//DRAW FILLED RECTANGLE BETWEEN THE SPECIFIED COORDINATES
+
+	uint8_t counter = y_start;
+
+	while(counter <= y_end)
+	{
+		SH1106_I2C_DrawLineHorizontal(x_start, x_end, counter, color);
+		counter += 1;
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawbox filled\n");
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color)
+{
+	//DRAW CIRCLE OUTLINE AT SPECIFIED CORDINATE WITH SPECIFIED RADIUS
+
+	int16_t curr_x, curr_y;
+	int16_t compare = radius * radius;
+	int16_t compare_1 = (radius + 1) * (radius + 1);
+
+	for(curr_y = -radius; curr_y <= radius; curr_y++)
+	{
+		for(curr_x = -radius; curr_x <= radius; curr_x++)
+		{
+			if(((curr_x * curr_x) + (curr_y * curr_y)) < compare)
+			{
+				//DO NOTHING
+			}
+			else if(((curr_x * curr_x) + (curr_y * curr_y)) < compare_1)
+			{
+				SH1106_I2C_DrawPixel(x + curr_x, y + curr_y, color);
+			}
+		}
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawcircle empty\n");
+	}
+}
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color)
+{
+	int16_t curr_x, curr_y;
+	int16_t compare = radius * radius;
+
+	for(curr_y = -radius; curr_y <= radius; curr_y++)
+	{
+		for(curr_x = -radius; curr_x <= radius; curr_x++)
+		{
+			if(((curr_x * curr_x) + (curr_y * curr_y)) <= compare)
+			{
+				SH1106_I2C_DrawPixel(x + curr_x, y + curr_y, color);
+			}
+		}
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Drawcircle filled\n");
+	}
+}
+
+/*void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawText(uint8_t x, uint8_t y, FONT_INFO f_info, char* str, uint8_t len, uint8_t color)
+{
+	//DRAW THE SPECIFIED TEXT IN THE SPECIFIED BITMAP FONT WITH THE SELECTED COLOR
+}*/
