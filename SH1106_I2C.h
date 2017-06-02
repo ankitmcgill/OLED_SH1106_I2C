@@ -33,7 +33,8 @@
 #ifndef _SH1106_I2C_H_
 #define _SH1106_I2C_H_
 
-//#include "FONT_INFO.h"
+#include "FONT_INFO.h"
+#include "string.h"
 
 #ifdef ESP8266
 	#include "ets_sys.h"
@@ -63,8 +64,8 @@
 //CONTROL BYTES
 #define SH1106_I2C_CONTROL_BYTE_CMD_SINGLE			0x80
 #define SH1106_I2C_CONTROL_BYTE_CMD_STREAM			0x00
-#define SH1106_I2C_CONTROL_BYTE_DATA_SINGLE		0xC0
-#define SH1106_I2C_CONTROL_BYTE_DATA_STREAM		0x40
+#define SH1106_I2C_CONTROL_BYTE_DATA_SINGLE			0xC0
+#define SH1106_I2C_CONTROL_BYTE_DATA_STREAM			0x40
 
 //FUNDAMENTAL COMMANDS (DATASHEET PG 29)
 #define SH1106_I2C_CMD_SET_COLUMN_LOWER_4			0x00
@@ -106,7 +107,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayOnOff(uint8_t on);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayContrast(uint8_t contrast_val);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayNormal(void);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(uint8_t fill_pattern);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t len);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void);
 
 //DRAWING FUNCTIONS
@@ -117,7 +118,9 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_st
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color);
 void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap();
-//void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawText(uint8_t x, uint8_t y, FONT_INFO f_info, char* str, uint8_t len, uint8_t color);
+
+//COMPLEX DRAWING FUNCTIONS
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color);
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color);
 //END FUNCTION PROTOTYPES/////////////////////////////////
 #endif

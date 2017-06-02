@@ -94,7 +94,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_PAGE_ADDRESS | 0);
 
 	//SET COMMON OUTPUT SCAN DIRECTION = TOP -> BOTTOM
-	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COMMON_SCAN_DIRECTION | 0);
+	_sh1106_i2c_send_byte_function(SH1106_I2C_CMD_SET_COMMON_SCAN_DIRECTION | 8);
 
 	//_sh1106_i2c_send_byte_function(0x00);
 	//_sh1106_i2c_send_byte_function(0x10);
@@ -250,21 +250,155 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void)
 	_sh1106_i2c_send_stop_function();
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(uint8_t fill_pattern)
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t pattern_len)
 {
 	//RESET THE CURSOR TO COLUMN 0, PAGE 0
-	//CLEAR THE SCREEN AND FILL WITH THE SPECIFIED PATTERN
+	//CLEAR THE SCREEN AND FILL WITH THE SPECIFIED PATTERN OF SPECIFIED BYTES (len)
+	//PATTER WIDTH TO BE ASSUMED = 1 (8 BITS)
+	//NOTE SINCE CLEAR SCREEN AND FILL WITH PATTERN WORKS AT THE MOST BASIC LEVEL, WE NEED TO BOTH SET AND CLEAR
+	//THE PIXELS
 
-	uint16_t counter = 0;
+	uint16_t x_offset = 0;
+	uint16_t y_offset = 0;
+	uint8_t byte;
+	int16_t byte_counter;
+	uint8_t i;
+	uint8_t color;
 
-	for(counter = 0; counter < (SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1); counter++)
+	byte_counter = -1;
+
+	while(y_offset < ((SH1106_I2C_OLED_MAX_PAGE + 1) * 8))
 	{
-		_sh1106_framebuffer_pointer[counter] = fill_pattern;
+		byte_counter++;
+		if(byte_counter == pattern_len)
+		{
+			byte_counter = 0;
+		}
+		byte = fill_pattern[byte_counter];
+
+		while(x_offset < 8)
+		{
+			//DRAW THE PIXEL IF REQUIRED
+			if(byte & 0x80)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x40)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x20)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x10)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x08)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x04)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x02)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+
+			if(byte & 0x01)
+			{
+				color = 1;
+			}
+			else
+			{
+				color = 0;
+			}
+			for(i = 0; i < 16; i++)
+			{
+				SH1106_I2C_DrawPixel(x_offset + (8 * i), y_offset, color);
+			}
+			x_offset++;
+		}
+		//RESET x_offset
+		x_offset = 0;
+		y_offset++;
 	}
 
 	if(_sh1106_i2c_debug)
 	{
-		debug_printf("SH1106 : Display filled with pattern = 0x%x\n", fill_pattern);
+		debug_printf("SH1106 : Screen reseted and cleared with specified pattern\n");
 	}
 
 }
@@ -455,7 +589,228 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_
 	}
 }
 
-/*void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawText(uint8_t x, uint8_t y, FONT_INFO f_info, char* str, uint8_t len, uint8_t color)
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color)
 {
-	//DRAW THE SPECIFIED TEXT IN THE SPECIFIED BITMAP FONT WITH THE SELECTED COLOR
-}*/
+	//DRAW THE SPECIFIED TEXT STRING AT THE GIVEN LOCATION WITH THE SPECIFIED FONT AND COLOR
+
+	uint16_t counter_char;
+	uint16_t x_offset = x;
+	uint16_t y_offset = y;
+	uint16_t length = strlen(str);
+
+	os_printf("string len = %u\n", length);
+
+	uint16_t i;
+
+	//GET FONT HEGHT
+	//ONLY FONTS WITH COMMON HEIGHT SUPPORTED
+	uint16_t font_height_bits = font.font_char_descriptors[0][1];
+	uint16_t char_width_bytes;
+	uint16_t current_char;
+
+	for(counter_char = 0; counter_char < length; counter_char++)
+	{
+		y_offset = y;
+		os_printf("current char = %c", str[counter_char]);
+		os_printf(" pos = %u,%u\n", x_offset, y_offset);
+
+		current_char = str[counter_char];
+
+		if(current_char < font.start_char || current_char > font.end_char)
+		{
+			//CHARACTER IS NOT SUPPORTED BY SPECIFIED FONT
+			//DRAW A BLOCK 8 BITS WIDE AND HEIGHT OF THE FONT IN CHARACTERS PLACE
+
+			while(y_offset < font_height_bits)
+			{
+				SH1106_I2C_DrawLineHorizontal(x_offset, x_offset + 7, y_offset, color);
+				y_offset += 1;
+			}
+			x_offset += 8;
+		}
+		else
+		{
+			//CHARACTER SUPPORTED BY THE FONT
+
+			char_width_bytes = (font.font_char_descriptors[current_char - font.start_char][0]);
+
+			while(y_offset < (y + font_height_bits))
+			{
+				for(i = 0; i < char_width_bytes; i++)
+				{
+					uint8_t byte = font.font_bitmap[font.font_char_descriptors[current_char - font.start_char][2] + (char_width_bytes * (y_offset - y)) + i];
+					os_printf("currn char %d start char %d\n", current_char, font.start_char);
+					os_printf("val = %u\n", (font.font_char_descriptors[current_char - font.start_char])[2]);
+					os_printf("counter = %u, byte = %x\n", (font.font_char_descriptors[current_char - font.start_char])[2] + (char_width_bytes * (y_offset - y)) + i, byte);
+					os_printf("added %u\n", (char_width_bytes * (y_offset - y)));
+					os_printf("i %u\n", i);
+					if(byte & 0x80)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x40)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x20)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x10)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x08)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x04)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x02)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+					if(byte & 0x01)
+					{
+						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+					}
+					x_offset++;
+				}
+				x_offset -= (char_width_bytes * 8);
+				y_offset++;
+			}
+		}
+		x_offset += (char_width_bytes * 8);
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : String written\n");
+	}
+}
+
+void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color)
+{
+	//DRAW BITMAP OF THE SPECIFIED DIMENSIONS AT SPECIFIED X,Y CORDINATES IN THE SPECIFIED COLOR
+	//BITMAP NEEDS TO BE IN ROW MAJOR FORMAT AND DIMENSIONS NEED TO BE MULTIPLE OF 8 BITS
+	//WITH BITMAP WE WILL DO BOTH PIXEL SETTING AND CLEARNING
+
+	uint16_t x_offset = x;
+	uint16_t y_offset = y;
+	uint8_t byte;
+	uint8_t not_color;
+
+	uint16_t row_size_bytes = (x_len_bits / 8);
+
+	if(color == 0)
+	{
+		not_color = 1;
+	}
+	else
+	{
+		not_color = 0;
+	}
+
+	while(y_offset < (y + y_len_bits))
+	{
+		while(x_offset < (x + x_len_bits))
+		{
+			//GET A NEW BYTE FROM BUFFER IF BITS TRAVERSED IN CURRENT ROW EXCEEDS 8
+			if(((x_offset - x) % 8) == 0)
+			{
+				byte = bitmap[(row_size_bytes * (y_offset - y)) + ((x_offset - x) / 8)];
+			}
+
+			//DRAW THE PIXEL IF REQUIRED
+			if(byte & 0x80)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x40)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x20)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x10)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x08)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x04)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x02)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+			if(byte & 0x01)
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, color);
+			}
+			else
+			{
+				SH1106_I2C_DrawPixel(x_offset, y_offset, not_color);
+			}
+			x_offset++;
+		}
+		//RESET x_offset
+		x_offset = x;
+		y_offset++;
+	}
+
+	if(_sh1106_i2c_debug)
+	{
+		debug_printf("SH1106 : Bitmap written of size %u bits\n", (x_len_bits * y_len_bits));
+	}
+}
