@@ -639,11 +639,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y
 				for(i = 0; i < char_width_bytes; i++)
 				{
 					uint8_t byte = font.font_bitmap[font.font_char_descriptors[current_char - font.start_char][2] + (char_width_bytes * (y_offset - y)) + i];
-					os_printf("currn char %d start char %d\n", current_char, font.start_char);
-					os_printf("val = %u\n", (font.font_char_descriptors[current_char - font.start_char])[2]);
-					os_printf("counter = %u, byte = %x\n", (font.font_char_descriptors[current_char - font.start_char])[2] + (char_width_bytes * (y_offset - y)) + i, byte);
-					os_printf("added %u\n", (char_width_bytes * (y_offset - y)));
-					os_printf("i %u\n", i);
+
 					if(byte & 0x80)
 					{
 						SH1106_I2C_DrawPixel(x_offset, y_offset, color);
@@ -728,6 +724,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uin
 			if(((x_offset - x) % 8) == 0)
 			{
 				byte = bitmap[(row_size_bytes * (y_offset - y)) + ((x_offset - x) / 8)];
+				os_printf("byte = %x\n",byte);
 			}
 
 			//DRAW THE PIXEL IF REQUIRED
