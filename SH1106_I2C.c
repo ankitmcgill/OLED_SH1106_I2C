@@ -724,7 +724,6 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uin
 			if(((x_offset - x) % 8) == 0)
 			{
 				byte = bitmap[(row_size_bytes * (y_offset - y)) + ((x_offset - x) / 8)];
-				os_printf("byte = %x\n",byte);
 			}
 
 			//DRAW THE PIXEL IF REQUIRED
