@@ -2,6 +2,8 @@
 * SH1106 BASED OLED MODULE (128 x 64)
 * I2C MODE
 *
+* ---- ARM VERSION ----
+*
 * NOTE: THE OLED CONTROLLER SUPPORTS BOTH I2C AND SPI, BUT THE
 * 		MODULES BOUGHT USUALLY HARDWIRE TO SELECT A PARTICULAR
 * 		MODE
@@ -13,7 +15,7 @@
 * 		SH1106
 * 			(1) DISPLAY BUFFER = 132x64 (THIS IS MAPPED TO 128x64 OF THE OLED)
 * 			(2) ONLY SUPPORTS PAGE ADDRESSING MODE (SSD1306 PROVIDES VARIOUS MODES)
-	* 			1 BYTE WRITES ALL THE ROWS IN A PAGE (8) AND THEN THE CURSOR MOVES
+* 				1 BYTE WRITES ALL THE ROWS IN A PAGE (8) AND THEN THE CURSOR MOVES
 * 				ON TO THE NEXT COLUMN. COLUMN INCREAMENTS ACUTOMATICALLY. HOWEVER
 * 				WHEN REACHED THE END OF PAGE, NEED TO SET THE NEXT PAGE MANUALLY
 * 			(3) DOES NOT SUPPORT CUSTOM WINDOW WITHIN THE DISPLAY RAM
@@ -41,14 +43,14 @@ static uint8_t _sh1106_i2c_slave_address;
 static uint8_t* _sh1106_framebuffer_pointer;
 //END LOCAL LIBRARY VARIABLES/////////////////////////////
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDebug(uint8_t debug_on)
+void  SH1106_I2C_SetDebug(uint8_t debug_on)
 {
 	//SET DEBUG PRINTF ON(1) OR OFF(0)
 
 	_sh1106_i2c_debug = debug_on;
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDeviceAddress(uint8_t address)
+void  SH1106_I2C_SetDeviceAddress(uint8_t address)
 {
 	//SET THE I2C MODULE SLAVE ADDRESS
 	//NOTE THIS IS THE 7 BIT ADDRESS (WITHOUT THE R/W BIT)
@@ -65,18 +67,19 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDeviceAddress(uint8_t address)
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
+void  SH1106_I2C_Init(void)
 {
 	//INITIALIZE THE OLED MODULE AS PER THE DEFAULT PARAMETERS
 
 	//INITIALIZE DISPLAY FRAMBUFFER
-	_sh1106_framebuffer_pointer = (uint8_t*)os_zalloc((SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1));
+	_sh1106_framebuffer_pointer = (uint8_t*)malloc((SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1));
+	memset(_sh1106_framebuffer_pointer, 0, (SH1106_I2C_OLED_MAX_COLUMN + 1) * (SH1106_I2C_OLED_MAX_PAGE + 1));
 
 	//INITIALIZE THE DISPLAY
 	_sh1106_i2c_send_start_function();
 
 	//SET I2C SLAVE WRITE ADDRESS
-	_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+	INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 
 	//SET TYPE TO COMMAND STREAM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
@@ -154,14 +157,14 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void)
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayOnOff(uint8_t on)
+void  SH1106_I2C_SetDisplayOnOff(uint8_t on)
 {
 	//TURN THE DISPLAY ON/OFF DEPENDING ON INPUT ARGUENT VALUE
 
 	_sh1106_i2c_send_start_function();
 
 	//SET I2C SLAVE WRITE ADDRESS
-	_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+	INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 
 	//SET TYPE TO COMMAND STREAM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
@@ -185,7 +188,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayOnOff(uint8_t on)
 	_sh1106_i2c_send_stop_function();
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayContrast(uint8_t contrast_val)
+void  SH1106_I2C_SetDisplayContrast(uint8_t contrast_val)
 {
 	//SET THE CONTRAST OF THE DISPLAY (0 - 255)
 	//HIGHER THE CONTRAST, HIGHER THE DISPLAY CURRENT CONSUMPTION
@@ -193,7 +196,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayContrast(uint8_t contrast_val)
 	_sh1106_i2c_send_start_function();
 
 	//SET I2C SLAVE WRITE ADDRESS
-	_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+	INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 
 	//SET TYPE TO COMMAND STREAM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
@@ -208,14 +211,14 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayContrast(uint8_t contrast_val)
 	_sh1106_i2c_send_stop_function();
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayNormal(void)
+void  SH1106_I2C_SetDisplayNormal(void)
 {
 	//SET DISPLAY TO NORMAL MODE
 
 	_sh1106_i2c_send_start_function();
 
 	//SET I2C SLAVE WRITE ADDRESS
-	_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+	INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 
 	//SET TYPE TO COMMAND STREAM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
@@ -229,14 +232,14 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayNormal(void)
 	_sh1106_i2c_send_stop_function();
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void)
+void  SH1106_I2C_SetDisplayInverted(void)
 {
 	//SET DISPLAY TO INVERTED MODE
 
 	_sh1106_i2c_send_start_function();
 
 	//SET I2C SLAVE WRITE ADDRESS
-	_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+	INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 
 	//SET TYPE TO COMMAND STREAM
 	_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
@@ -250,7 +253,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void)
 	_sh1106_i2c_send_stop_function();
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t pattern_len)
+void  SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t pattern_len)
 {
 	//RESET THE CURSOR TO COLUMN 0, PAGE 0
 	//CLEAR THE SCREEN AND FILL WITH THE SPECIFIED PATTERN OF SPECIFIED BYTES (len)
@@ -403,7 +406,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pa
 
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
+void  SH1106_I2C_UpdateDisplay(void)
 {
 	//TRANSFER THE FRAMEBUFFER TO THE DISPLAY IN BULK
 
@@ -415,7 +418,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 	{
 		//SET CURSOR TO THE BEGINNING OF THE CURRENT PAGE
 		_sh1106_i2c_send_start_function();
-		_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+		INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 		_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_CMD_STREAM);
 
 		//SET COLUMN TO 2
@@ -428,7 +431,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 
 		//SEND PAGE DATA
 		_sh1106_i2c_send_start_function();
-		_sh1106_i2c_send_byte_function((_sh1106_i2c_slave_address << 1));
+		INTERNAL_I2C_SendWriteAddress((_sh1106_i2c_slave_address << 1));
 		_sh1106_i2c_send_byte_function(SH1106_I2C_CONTROL_BYTE_DATA_STREAM);
 
 		for(x = 0; x < (SH1106_I2C_OLED_MAX_COLUMN + 1); x++)
@@ -445,7 +448,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void)
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color)
+void  SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color)
 {
 	//SET OR UNSET A PIXEL AT THE SPECIFIED X,Y LOCATION
 
@@ -472,7 +475,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t co
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color)
+void  SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color)
 {
 	//DRAW A VERTICAL LINE
 
@@ -489,7 +492,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_star
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color)
+void  SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color)
 {
 	//DRAW A HORIZONTAL LINE
 
@@ -506,7 +509,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
+void  SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
 {
 	//DRAW EMPTY RECTANGLE BETWEEN THE SPECIFIED COORDINATES
 
@@ -521,7 +524,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_st
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
+void  SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color)
 {
 	//DRAW FILLED RECTANGLE BETWEEN THE SPECIFIED COORDINATES
 
@@ -539,7 +542,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_s
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color)
+void  SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color)
 {
 	//DRAW CIRCLE OUTLINE AT SPECIFIED CORDINATE WITH SPECIFIED RADIUS
 
@@ -567,7 +570,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t
 		debug_printf("SH1106 : Drawcircle empty\n");
 	}
 }
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color)
+void  SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color)
 {
 	int16_t curr_x, curr_y;
 	int16_t compare = radius * radius;
@@ -589,7 +592,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color)
+void  SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color)
 {
 	//DRAW THE SPECIFIED TEXT STRING AT THE GIVEN LOCATION WITH THE SPECIFIED FONT AND COLOR
 
@@ -598,7 +601,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y
 	uint16_t y_offset = y;
 	uint16_t length = strlen(str);
 
-	os_printf("string len = %u\n", length);
+	debug_printf("string len = %u\n", length);
 
 	uint16_t i;
 
@@ -611,8 +614,8 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y
 	for(counter_char = 0; counter_char < length; counter_char++)
 	{
 		y_offset = y;
-		os_printf("current char = %c", str[counter_char]);
-		os_printf(" pos = %u,%u\n", x_offset, y_offset);
+		debug_printf("current char = %c", str[counter_char]);
+		debug_printf(" pos = %u,%u\n", x_offset, y_offset);
 
 		current_char = str[counter_char];
 
@@ -694,7 +697,7 @@ void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y
 	}
 }
 
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color)
+void  SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color)
 {
 	//DRAW BITMAP OF THE SPECIFIED DIMENSIONS AT SPECIFIED X,Y CORDINATES IN THE SPECIFIED COLOR
 	//BITMAP NEEDS TO BE IN ROW MAJOR FORMAT AND DIMENSIONS NEED TO BE MULTIPLE OF 8 BITS

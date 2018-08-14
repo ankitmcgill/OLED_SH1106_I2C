@@ -2,6 +2,8 @@
 * SH1106 BASED OLED MODULE (128 x 64)
 * I2C MODE
 *
+* ---- ARM VERSION ----
+*
 * NOTE: THE OLED CONTROLLER SUPPORTS BOTH I2C AND SPI, BUT THE
 * 		MODULES BOUGHT USUALLY HARDWIRE TO SELECT A PARTICULAR
 * 		MODE
@@ -33,25 +35,18 @@
 #ifndef _SH1106_I2C_H_
 #define _SH1106_I2C_H_
 
-#include "FONT_INFO.h"
+#include <stdio.h>
+#include <stdint.h>
 #include "string.h"
+#include "FONT_INFO.h"
 
-#ifdef ESP8266
-	#include "ets_sys.h"
-	#include "osapi.h"
-	#include "gpio.h"
-	#include "os_type.h"
-	#include "mem.h"
+#include "internal_i2c.h"
 
-	#define PUT_FUNCTION_IN_FLASH 				ICACHE_FLASH_ATTR
-	#define _sh1106_i2c_backend_init			ESP8266_I2C_Init
-	#define	 _sh1106_i2c_send_start_function	ESP8266_I2C_SendStart
-	#define _sh1106_i2c_send_stop_function		ESP8266_I2C_SendStop
-	#define _sh1106_i2c_send_byte_function		ESP8266_I2C_SendByte
-	#define debug_printf 						os_printf
-#else
-	#define PUT_FUNCTION_IN_FLASH
-#endif
+#define _sh1106_i2c_backend_init			INTERNAL_I2C_Init
+#define	_sh1106_i2c_send_start_function		INTERNAL_I2C_SendStart
+#define _sh1106_i2c_send_stop_function		INTERNAL_I2C_SendStop
+#define _sh1106_i2c_send_byte_function		INTERNAL_I2C_SendByte
+#define debug_printf(...) 					
 
 //I2C ADDRESS
 #define SH1106_I2C_ADDRESS_1						0x3C
@@ -98,29 +93,29 @@
 
 //FUNCTION PROTOTYPES/////////////////////////////////////
 //CONFIGURATION FUNCTIONS
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDebug(uint8_t debug_on);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDeviceAddress(uint8_t address);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_Init(void);
+void  SH1106_I2C_SetDebug(uint8_t debug_on);
+void  SH1106_I2C_SetDeviceAddress(uint8_t address);
+void  SH1106_I2C_Init(void);
 
 //CONTROL FUNCTIONS
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayOnOff(uint8_t on);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayContrast(uint8_t contrast_val);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayNormal(void);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_SetDisplayInverted(void);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t len);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_UpdateDisplay(void);
+void  SH1106_I2C_SetDisplayOnOff(uint8_t on);
+void  SH1106_I2C_SetDisplayContrast(uint8_t contrast_val);
+void  SH1106_I2C_SetDisplayNormal(void);
+void  SH1106_I2C_SetDisplayInverted(void);
+void  SH1106_I2C_ResetAndClearScreen(const uint8_t* fill_pattern, uint8_t len);
+void  SH1106_I2C_UpdateDisplay(void);
 
 //DRAWING FUNCTIONS
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color);
+void  SH1106_I2C_DrawPixel(uint8_t x, uint8_t y, uint8_t color);
+void  SH1106_I2C_DrawLineVertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t color);
+void  SH1106_I2C_DrawLineHorizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t color);
+void  SH1106_I2C_DrawBoxEmpty(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
+void  SH1106_I2C_DrawBoxFilled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t color);
+void  SH1106_I2C_DrawCircleEmpty(int8_t x, int8_t y, int8_t radius, uint8_t color);
+void  SH1106_I2C_DrawCircleFilled(int8_t x, int8_t y, int8_t radius, uint8_t color);
 
 //COMPLEX DRAWING FUNCTIONS
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color);
-void PUT_FUNCTION_IN_FLASH SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color);
+void  SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO font, uint8_t color);
+void  SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len_bits, uint8_t y_len_bits, uint8_t color);
 //END FUNCTION PROTOTYPES/////////////////////////////////
 #endif
