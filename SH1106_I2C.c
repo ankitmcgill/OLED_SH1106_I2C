@@ -32,6 +32,7 @@
 *   (3) http://forum.arduino.cc/index.php?topic=265557.0
 ****************************************************************/
 
+#include <stdlib.h>
 #include "SH1106_I2C.h"
 
 //LOCAL LIBRARY VARIABLES////////////////////////////////
@@ -608,7 +609,7 @@ void  SH1106_I2C_DrawString(char* str, uint8_t x, uint8_t y, const FONT_INFO fon
 	//GET FONT HEGHT
 	//ONLY FONTS WITH COMMON HEIGHT SUPPORTED
 	uint16_t font_height_bits = font.font_char_descriptors[0][1];
-	uint16_t char_width_bytes;
+	uint16_t char_width_bytes = 0;
 	uint16_t current_char;
 
 	for(counter_char = 0; counter_char < length; counter_char++)
@@ -705,7 +706,7 @@ void  SH1106_I2C_DrawBitmap(uint8_t* bitmap, uint8_t x, uint8_t y, uint8_t x_len
 
 	uint16_t x_offset = x;
 	uint16_t y_offset = y;
-	uint8_t byte;
+	uint8_t byte = 0;
 	uint8_t not_color;
 
 	uint16_t row_size_bytes = (x_len_bits / 8);
